@@ -1,0 +1,17 @@
+fastapi             
+uvicorn[standard]   
+pytesseract         
+Pillow              
+python-multipart    
+pymongo
+pdf2image
+PyMuPDF
+groq
+pytest
+pytest-mock
+
+
+#openai
+# Exemplo para Hugging Face:
+# huggingface_hub
+# sentence-transformers

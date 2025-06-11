@@ -1,0 +1,28 @@
+Título da Vaga: Engenheiro(a) de Dados Sênior (Foco em AWS)
+
+Localização: Remoto (Brasil)
+
+Descrição da Empresa:
+A TechMatch está na vanguarda da automação de recrutamento e seleção, utilizando IA para conectar talentos às melhores oportunidades. Nossa plataforma de dados é o coração do nosso negócio, e estamos buscando um(a) Engenheiro(a) de Dados Sênior para nos ajudar a escalar e otimizar nossos pipelines, garantindo que nossas decisões sejam sempre baseadas em dados de alta qualidade.
+
+Responsabilidades:
+- Projetar, desenvolver e manter pipelines de dados robustos, escaláveis e otimizados (ETL/ELT).
+- Arquitetar e gerenciar nosso Data Lake e Data Warehouse na nuvem AWS.
+- Trabalhar em estreita colaboração com as equipes de Ciência de Dados e Produto para entender os requisitos e fornecer os dados necessários.
+- Implementar e promover as melhores práticas de governança de dados, qualidade e segurança.
+- Automatizar o provisionamento e gerenciamento da infraestrutura de dados utilizando IaC (Infrastructure as Code).
+- Atuar como mentor(a) para outros engenheiros da equipe, elevando o nível técnico do time.
+
+Requisitos Obrigatórios:
+- 5+ anos de experiência como Engenheiro de Dados.
+- Profundo conhecimento em Python ou Scala para processamento de dados.
+- Experiência prática com ferramentas de orquestração como Apache Airflow.
+- Sólida experiência com o ecossistema de Big Data, especialmente Apache Spark.
+- Experiência comprovada com serviços de dados da AWS (S3, Glue, EMR, Redshift).
+- Proficiência em SQL e modelagem de dados para ambientes analíticos.
+
+Requisitos Desejáveis (Diferenciais):
+- Experiência com ferramentas de IaC como Terraform.
+- Conhecimento em streaming de dados com Kafka, Kinesis ou Flink.
+- Familiaridade com bancos de dados NoSQL (ex: Cassandra, DynamoDB).
+- Mestrado na área de Ciência da Computação ou afins.

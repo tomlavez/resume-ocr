@@ -1,0 +1,27 @@
+Título da Vaga: Especialista em Segurança Ofensiva (Pentester)
+
+Localização: São Paulo, SP (Híbrido)
+
+Descrição da Empresa:
+A segurança de nossos dados e de nossos clientes é a principal prioridade na TechMatch. Estamos montando uma equipe de Red Team e buscamos um(a) especialista em segurança ofensiva para realizar testes de intrusão, identificar vulnerabilidades e nos ajudar a fortalecer nossas defesas de forma proativa.
+
+Responsabilidades:
+- Planejar e executar testes de intrusão (pentests) em aplicações web, mobile e APIs.
+- Realizar análises de vulnerabilidade em infraestrutura de nuvem (AWS/GCP).
+- Documentar os achados de forma clara e técnica, com provas de conceito e recomendações de mitigação.
+- Apresentar os resultados para as equipes de desenvolvimento e liderança.
+- Desenvolver scripts e ferramentas para automatizar tarefas de segurança.
+- Manter-se atualizado com as últimas ameaças, vulnerabilidades e técnicas de ataque (TTPs).
+
+Requisitos Obrigatórios:
+- Experiência comprovada em testes de intrusão (pentesting).
+- Profundo conhecimento das vulnerabilidades do OWASP Top 10.
+- Domínio de ferramentas de segurança como Burp Suite, Nmap, Metasploit.
+- Habilidade para escrever scripts em Python ou Bash.
+- Conhecimento em segurança de redes e sistemas operacionais.
+
+Requisitos Desejáveis (Diferenciais):
+- Certificações como OSCP, OSWE, CEH.
+- Experiência com DevSecOps e segurança em pipelines de CI/CD.
+- Conhecimento em análise de malware ou forense digital.
+- Experiência com as normas PCI-DSS ou ISO 27001.
