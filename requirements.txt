@@ -7,4 +7,4 @@ pdf2image
 PyMuPDF
 pydantic
 groq
-pymongo
+motor

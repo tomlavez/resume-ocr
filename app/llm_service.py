@@ -114,7 +114,7 @@ def get_llm_analysis(resume_text: str, query: str = None) -> AnalysisResponse | 
             if "/" in score:
                 score = score.split("/")[0].strip()
 
-            # Se começar com :, remove
+            # Se começar com : remove
             if score.startswith(":"):
                 score = score[1:].strip()
             if summary.startswith(":"):
