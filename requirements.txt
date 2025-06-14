@@ -1,17 +1,10 @@
 fastapi             
 uvicorn[standard]   
+python-multipart    
 pytesseract         
 Pillow              
-python-multipart    
-pymongo
 pdf2image
 PyMuPDF
+pydantic
 groq
-pytest
-pytest-mock
-
-
-#openai
-# Exemplo para Hugging Face:
-# huggingface_hub
-# sentence-transformers
+pymongo

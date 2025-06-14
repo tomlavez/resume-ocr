@@ -1,4 +1,3 @@
 .env
 .venv
-test.py
-test_resume_only.py
+__pycache__
