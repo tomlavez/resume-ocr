@@ -2,6 +2,17 @@
 
 Sistema assíncrono para análise automatizada de currículos usando IA e OCR.
 
+## 💡 Motivação do Projeto
+
+Este projeto foi desenvolvido como resposta ao desafio técnico descrito no documento **teste_back_ia.pdf**, que propõe a criação de um sistema inteligente para análise automatizada de currículos. O objetivo é demonstrar competências em:
+
+- **Desenvolvimento Backend**: APIs REST com FastAPI
+- **Inteligência Artificial**: Integração com modelos de linguagem (LLM)
+- **Processamento de Documentos**: OCR e análise de texto
+- **Containerização**: Deploy com Docker e orquestração de serviços
+
+A solução implementa todos os requisitos técnicos solicitados, oferecendo uma API robusta para análise e ranqueamento de currículos com base em descrições de vagas.
+
 ## 🚀 Funcionalidades
 
 - **Análise com Query**: Ranqueia currículos por adequação à vaga (0-10)
