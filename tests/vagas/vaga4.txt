@@ -1,0 +1,25 @@
+Título da Vaga: Gerente de Produto Técnico - Plataforma de APIs
+
+Localização: Remoto (Brasil)
+
+Descrição da Empresa:
+A plataforma da TechMatch é consumida por desenvolvedores de empresas parceiras através de nossas APIs. Buscamos um(a) Gerente de Produto Técnico(a) para ser a voz desses desenvolvedores, definindo a visão e o roadmap estratégico para nossas APIs e serviços de plataforma.
+
+Responsabilidades:
+- Definir e comunicar a visão, estratégia e roadmap para as APIs da TechMatch.
+- Conduzir pesquisas de mercado e entrevistas com clientes (desenvolvedores) para entender suas necessidades e dores.
+- Traduzir os requisitos de negócio em especificações técnicas detalhadas, histórias de usuário e critérios de aceite.
+- Trabalhar em estreita colaboração com as equipes de engenharia e arquitetura para projetar contratos de API claros e consistentes.
+- Gerenciar o backlog do produto, priorizando iniciativas com base no impacto para o negócio e para os clientes.
+- Analisar métricas de uso das APIs para guiar decisões de produto.
+
+Requisitos Obrigatórios:
+- Experiência prévia como Gerente de Produto ou Product Owner em produtos técnicos ou de plataforma (B2B, SaaS).
+- Capacidade de entender e discutir conceitos técnicos como APIs REST, autenticação, webhooks e SDKs.
+- Excelente habilidade de comunicação, tanto escrita (documentação) quanto verbal.
+- Experiência com metodologias ágeis (Scrum/Kanban) e ferramentas como Jira/Confluence.
+
+Requisitos Desejáveis (Diferenciais):
+- Background técnico anterior como desenvolvedor(a) de software.
+- Certificação de Product Owner (CSPO, PSPO).
+- Experiência com análise de dados usando SQL.

@@ -1,0 +1,25 @@
+Título da Vaga: Programa de Estágio em Engenharia de Software
+
+Localização: São Paulo, SP (Híbrido)
+
+Descrição da Empresa:
+O futuro da TechMatch está em novos talentos! Nosso programa de estágio busca estudantes apaixonados(as) por tecnologia, com muita vontade de aprender e que queiram iniciar sua carreira resolvendo problemas complexos de software. Você terá a oportunidade de trabalhar ao lado de engenheiros experientes em projetos reais.
+
+Responsabilidades:
+- Colaborar com uma equipe de desenvolvimento em tarefas de programação (backend ou frontend).
+- Ajudar na criação de testes unitários para garantir a qualidade do código.
+- Participar das cerimônias ágeis da equipe (dailies, plannings).
+- Pesquisar e aprender novas tecnologias para aplicar nos projetos.
+- Desenvolver um projeto de estágio com a mentoria de um(a) engenheiro(a) sênior.
+
+Requisitos Obrigatórios:
+- Estar cursando Ciência da Computação, Engenharia de Computação, Sistemas de Informação ou áreas correlatas.
+- Conhecimento em pelo menos uma linguagem de programação (ex: Python, Java, JavaScript, C++).
+- Sólidos conhecimentos em lógica de programação, estrutura de dados e algoritmos.
+- Ser proativo(a) e ter excelente capacidade de aprendizado.
+- Disponibilidade para estagiar 30 horas semanais.
+
+Requisitos Desejáveis (Diferenciais):
+- Projetos pessoais ou acadêmicos publicados no GitHub.
+- Participação em maratonas de programação ou outros eventos da área.
+- Conhecimento básico em Git.
