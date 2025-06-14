@@ -1,0 +1,10 @@
+fastapi             
+uvicorn[standard]   
+python-multipart    
+pytesseract         
+Pillow              
+pdf2image
+PyMuPDF
+pydantic
+groq
+motor

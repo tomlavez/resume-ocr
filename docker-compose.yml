@@ -1,0 +1,24 @@
+services:
+  api:
+    build: .  
+    ports:
+      - "8000:8000"  
+    volumes:
+      - .:/app  
+    env_file:
+      - .env 
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - GROQ_API_KEY=${GROQ_API_KEY}  
+    depends_on:
+      - mongo  
+  
+  mongo:
+    image: mongo:latest  
+    ports:
+      - "27017:27017"  
+    volumes:
+      - mongo-data:/data/db  
+
+volumes:
+  mongo-data:

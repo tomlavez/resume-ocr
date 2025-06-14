@@ -1,0 +1,28 @@
+Título da Vaga: Desenvolvedor(a) de Software Full-Stack Pleno (Node.js & React)
+
+Localização: Florianópolis, SC ou Remoto
+
+Descrição da Empresa:
+Na TechMatch, criamos interfaces intuitivas e APIs performáticas para nossos clientes. Nossa equipe de produto está crescendo e buscamos um(a) desenvolvedor(a) full-stack versátil para nos ajudar a construir novas funcionalidades em nossa plataforma, atuando tanto no backend quanto no frontend.
+
+Responsabilidades:
+- Desenvolver e manter APIs RESTful e microserviços em Node.js com TypeScript.
+- Construir interfaces de usuário reativas e componentizadas com React.js.
+- Colaborar com a equipe de produto e design para transformar mockups em aplicações funcionais.
+- Escrever código limpo, testável e bem documentado.
+- Participar do ciclo de vida completo do desenvolvimento, incluindo design, implementação, testes e deploy.
+- Empacotar e implantar aplicações utilizando Docker.
+
+Requisitos Obrigatórios:
+- 3+ anos de experiência com desenvolvimento web.
+- Experiência sólida com Node.js e TypeScript no backend.
+- Experiência sólida com React.js no frontend.
+- Conhecimento em bancos de dados relacionais (PostgreSQL) e NoSQL (MongoDB).
+- Experiência com Git para controle de versão.
+- Familiaridade com o ambiente Docker.
+
+Requisitos Desejáveis (Diferenciais):
+- Experiência com o framework NestJS.
+- Conhecimento em arquitetura de microserviços.
+- Experiência com testes automatizados (Jest, Cypress).
+- Familiaridade com serviços da AWS (ECS, S3).
