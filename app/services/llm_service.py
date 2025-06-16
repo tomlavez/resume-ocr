@@ -1,8 +1,10 @@
 import os
-import json
+import time
 from groq import Groq
 from pydantic import BaseModel, Field
-from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 client = Groq(
     api_key=os.getenv("GROQ_API_KEY"),
@@ -39,21 +41,36 @@ def get_llm_analysis(resume_text: str, query: str = None) -> AnalysisResponse | 
     if query:
         # Modo análise com vaga específica
         user_prompt = f"""
-        Você receberá uma requisição a respeito de um currículo. Essa requisição conterá informações sobre tecnologias, frameworks, linguagens de programação, etc.
-        A sua função é analisar o currículo em relação a requisição e fornecer um score e um resumo sobre o alinhamento do currículo com a requisição.
+        Você é um Analista de Talentos de IA altamente especializado. Sua função é realizar uma análise técnica e detalhada de um único currículo em relação a uma requisição de vaga ou perfil profissional.
         
-        Feedback:
-            Score: (float, de 0.0 a 10.0). O quanto o candidato está alinhado com a requisição.
-            Resumo: (string). Um resumo detalhado sobre a adequação do candidato. Considerar as tecnologias, frameworks, linguagens de programação, etc. da requisição e como o candidato se alinha com elas.
+        Você deve avaliar o alinhamento de um candidato (representado por seu currículo) com uma requisição específica, gerando uma pontuação (score), uma análise detalhada e observações pertinentes. Sua análise deve ser objetiva e estritamente baseada nos dados fornecidos.
         
-        Extra_comments:
-            Insira aqui qualquer extra_comment que você quiser adicionar sobre o currículo.
+        Metodologia de Análise (Passo a Passo):
+            1. **Interpretar a Requisição:**
+                * **Se a requisição for detalhada (descrição de vaga):** Identifique e liste todos os requisitos-chave: tecnologias, frameworks, linguagens, anos de experiência, certificações e outras competências.
+                * **Se a requisição for simples ou genérica (ex: "Backend", "Frontend Pleno", "Analista de Dados"):** Infira os requisitos essenciais para esse perfil.
+                    * *Exemplo para "Backend":* Você deve procurar por linguagens (Java, Python, C#, Node.js), bancos de dados (SQL, NoSQL), conhecimento em APIs (REST, GraphQL), arquitetura de sistemas (microsserviços) e cloud (AWS, Azure, GCP).
+                    * *Exemplo para "Qual o melhor candidato para a vaga de devops":* Trate isso como uma requisição por um perfil "DevOps" ideal e analise o currículo em relação a esse perfil (ferramentas de CI/CD, IaC como Terraform, contêineres como Docker/Kubernetes, scripting).
 
-        Para a 'score', use o seguinte critério:
-        - 8.0 a 10.0: Alinhamento ideal, atende a quase todas as tecnologias, frameworks, linguagens de programação, etc. da requisição.
-        - 6.0 a 7.9: Bom alinhamento, atende a uma quantidade significativa das tecnologias, frameworks, linguagens de programação, etc. da requisição, mas falta algumas.
-        - 4.0 a 5.9: Alinhamento razoável, atende a algumas, mas não a todas as tecnologias, frameworks, linguagens de programação, etc. da requisição.
-        - 0.0 a 3.9: Não está alinhado com a requisição. Atende a poucas ou nenhuma tecnologia, framework, linguagem de programação, etc. da requisição.
+            2.  **Analisar o Currículo:** Examine o texto completo do currículo para encontrar evidências diretas e indiretas que correspondam aos requisitos identificados no passo 1. Preste atenção especial aos anos de experiência com cada tecnologia e ao contexto dos projetos descritos.
+
+            3.  **Gerar a Análise:** Com base na comparação, construa o feedback. A pontuação deve refletir o alinhamento geral, e o resumo deve explicar o porquê dessa pontuação, detalhando os pontos fortes e as lacunas do candidato.
+
+        Critérios de Pontuação (Score):
+            * **8.0 - 10.0 (Alinhamento Forte):** O candidato atende a todos ou quase todos os requisitos essenciais da requisição. A experiência e as habilidades descritas são altamente relevantes.
+            * **6.0 - 7.9 (Alinhamento Bom):** O candidato atende à maioria dos requisitos importantes, mas possui algumas lacunas em tecnologias secundárias ou no tempo de experiência. É um candidato promissor.
+            * **4.0 - 5.9 (Alinhamento Razoável):** O candidato possui algumas das habilidades requeridas, mas falta conhecimento em pontos cruciais da requisição. Pode ser considerado para vagas de menor senioridade ou com treinamento.
+            * **0.0 - 3.9 (Alinhamento Baixo):** O candidato atende a poucos ou nenhum dos requisitos essenciais. O perfil não é compatível com a requisição.
+
+        Formato da Saída:
+        A sua resposta deve seguir extritamente a estrutura abaixo:
+        
+            Feedback:
+                Score: (float, de 0.0 a 10.0). O quanto o candidato está alinhado com a requisição.
+                Resumo: (string). Um resumo detalhado sobre a adequação do candidato. Considerar as tecnologias, frameworks, linguagens de programação, etc. da requisição e como o candidato se alinha com elas. Inclua informações sobre anos de experiência, projetos relevantes, habilidades técnicas e outras competências que sejam pertinentes à requisição. Aqui você deve explicar os pontos fortes e fracos do candidato, deixando claro o que faltou para que o candidato fosse considerado ideal para a requisição.
+            
+            Extra_comments:
+                Insira aqui qualquer extra_comment que você quiser adicionar sobre o currículo.
 
         ---
         DESCRIÇÃO DA REQUISIÇÃO:
@@ -74,7 +91,7 @@ def get_llm_analysis(resume_text: str, query: str = None) -> AnalysisResponse | 
 
         Feedback:
             Score: (string, senioridade do candidato, pode ser júnior, pleno ou sênior)
-            Resumo: (string, um resumo sobre o perfil profissional, experiências relevantes, competências técnicas e nível de senioridade do candidato)
+            Resumo: (string, um resumo detalhado sobre o perfil profissional, experiências relevantes, competências técnicas e nível de senioridade do candidato)
         
         Extra comments:
             Insira aqui qualquer extra_comment sobre pontos fortes, áreas de especialização ou observações relevantes do currículo.
@@ -111,6 +128,9 @@ def get_llm_analysis(resume_text: str, query: str = None) -> AnalysisResponse | 
             score = analysis_json.split(score)[1].split("\n")[0].strip()
             summary = analysis_json.split(resumo)[1].split("\n")[0].strip()
 
+            if len(summary) < 10:
+                continue  # Resumo muito curto, tentar novamente
+
             if "/" in score:
                 score = score.split("/")[0].strip()
 
@@ -128,8 +148,12 @@ def get_llm_analysis(resume_text: str, query: str = None) -> AnalysisResponse | 
 
             return data
         except Exception as e:
-            print(f"Erro ao contatar o serviço da Groq: {e}")
+            logger.warning(f"⚠️ Tentativa {i+1}/{MAX_RETRIES} falhou para Groq API - análise de currículo: {str(e)[:100]}...")
+            if i == MAX_RETRIES - 1:
+                logger.error(f"❌ Todas as tentativas falharam para Groq API - análise de currículo. Último erro: {e}")
             continue
+        
+    return AnalysisError(error=f"Erro ao processar o currículo, tente novamente mais tarde.")
 
 def validate_query(query: str) -> bool:
     """
@@ -179,6 +203,9 @@ def validate_query(query: str) -> bool:
     """
 
     for i in range(MAX_RETRIES):
+
+        time.sleep(0.5 * (i + 1))  # Atraso exponencial para evitar sobrecarga
+        
         try:
             response = client.chat.completions.create(
                 model="llama3-8b-8192",
@@ -201,7 +228,9 @@ def validate_query(query: str) -> bool:
                 return False            
 
         except Exception as e:
-            print(f"Erro ao contatar o serviço da Groq: {e}")
+            logger.warning(f"⚠️ Tentativa {i+1}/{MAX_RETRIES} falhou para Groq API - validação de query: {str(e)[:100]}...")
+            if i == MAX_RETRIES - 1:
+                logger.error(f"❌ Todas as tentativas falharam para Groq API - validação de query. Último erro: {e}")
             continue
 
     return False  

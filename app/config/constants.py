@@ -10,7 +10,7 @@ MAX_QUERY_LENGTH = 2500 # Query máximo de 2500 caracteres
 
 # Configurações de processamento
 MAX_RETRIES = 3 # Máximo de 3 retentativas no OCR
-MAX_CONCURRENT_PROCESSES = 5 # Máximo de 5 processos concorrentes
+MAX_CONCURRENT_PROCESSES = 3 # Máximo de 5 processos concorrentes
 
 # Extensões permitidas
 ALLOWED_EXTENSIONS = {'.pdf', '.png', '.jpg', '.jpeg'} 
