@@ -20,6 +20,12 @@ A solução implementa todos os requisitos técnicos solicitados, oferecendo uma
 - **Processamento Assíncrono**: Múltiplos arquivos simultaneamente
 - **Formatos Suportados**: PDF, PNG, JPG, JPEG
 
+## 🤖 Modelo de IA
+
+Este projeto utiliza o modelo **llama3-8b-8192** da Groq para análise de currículos. 
+
+> ⚠️ **Importante**: A troca do modelo pode causar variações significativas no desempenho e na qualidade das análises. O sistema foi otimizado especificamente para este modelo, incluindo os prompts de sistema e a estrutura de resposta esperada.
+
 ## 📋 Pré-requisitos
 
 - Docker
