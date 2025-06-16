@@ -1,8 +1,6 @@
 import os
-import json
 from groq import Groq
 from pydantic import BaseModel, Field
-from typing import Optional
 
 client = Groq(
     api_key=os.getenv("GROQ_API_KEY"),
@@ -44,16 +42,16 @@ def get_llm_analysis(resume_text: str, query: str = None) -> AnalysisResponse | 
         
         Feedback:
             Score: (float, de 0.0 a 10.0). O quanto o candidato está alinhado com a requisição.
-            Resumo: (string). Um resumo detalhado sobre a adequação do candidato. Considerar as tecnologias, frameworks, linguagens de programação, etc. da requisição e como o candidato se alinha com elas.
+            Resumo: (string). Um resumo detalhado sobre a adequação do candidato. Considerar as tecnologias, frameworks, linguagens de programação, etc. da requisição e como o candidato se alinha com elas. Inclua informações sobre anos de experiência, projetos relevantes, habilidades técnicas e outras competências que sejam pertinentes à requisição.
         
         Extra_comments:
             Insira aqui qualquer extra_comment que você quiser adicionar sobre o currículo.
 
         Para a 'score', use o seguinte critério:
-        - 8.0 a 10.0: Alinhamento ideal, atende a quase todas as tecnologias, frameworks, linguagens de programação, etc. da requisição.
-        - 6.0 a 7.9: Bom alinhamento, atende a uma quantidade significativa das tecnologias, frameworks, linguagens de programação, etc. da requisição, mas falta algumas.
-        - 4.0 a 5.9: Alinhamento razoável, atende a algumas, mas não a todas as tecnologias, frameworks, linguagens de programação, etc. da requisição.
-        - 0.0 a 3.9: Não está alinhado com a requisição. Atende a poucas ou nenhuma tecnologia, framework, linguagem de programação, etc. da requisição.
+        - 8.0 a 10.0: Alinhamento ideal, atende a quase todas as tecnologias, frameworks, linguagens de programação, etc. da requisição. Apresenta uma forte correspondência com a requisição.
+        - 6.0 a 7.9: Bom alinhamento, atende a uma quantidade significativa das tecnologias, frameworks, linguagens de programação, etc. da requisição, mas falta algumas. Apresenta uma boa correspondência com a requisição, mas ainda existem pontos discrepantes.
+        - 4.0 a 5.9: Alinhamento razoável, atende a algumas, mas não a todas as tecnologias, frameworks, linguagens de programação, etc. da requisição. Apresenta uma correspondência moderada com a requisição, mas existem várias lacunas.
+        - 0.0 a 3.9: Não está alinhado com a requisição. Atende a poucas ou nenhuma tecnologia, framework, linguagem de programação, etc. da requisição. Não apresenta uma correspondência significativa com a requisição.
 
         ---
         DESCRIÇÃO DA REQUISIÇÃO:

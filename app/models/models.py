@@ -1,7 +1,6 @@
 from typing import List, Union
 from pydantic import BaseModel, Field
 
-
 class ResumeResult(BaseModel):
     """Resultado da análise de um currículo individual."""
     filename: str = Field(..., description="Nome do arquivo processado", example="joao_silva.pdf")
