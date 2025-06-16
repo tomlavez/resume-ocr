@@ -8,6 +8,7 @@ from ..config.constants import MAX_USER_ID_LENGTH, MAX_QUERY_LENGTH, MAX_RETRIES
 from ..utils.utils import validate_form_inputs, validate_file_list, get_score
 from ..services.resume_service import process_resumes_concurrently
 from ..database import get_database_dependency, log_request_async, check_database_connection
+from ..llm_service import validate_query
 
 router = APIRouter(prefix="/analyze", tags=["Análise de Currículos"])
 
@@ -301,6 +302,13 @@ curl -X POST "http://localhost:8000/analyze/" \
                                 ]
                             }
                         },
+                        "query_inválida": {
+                            "summary": "Query inválida",
+                            "description": "A query fornecida não é relevante para análise de currículo, sendo considerada ou fora do escopo ou voltada para uma análise pessoal e não técnica.",
+                            "value": {
+                                "detail": "Query inválida. Por favor forneça uma query relevante para uma análise de currículo."
+                            }
+                        },
                         "arquivo_sem_nome": {
                             "summary": "Arquivo sem nome",
                             "description": "Um dos arquivos foi enviado sem nome de arquivo",
@@ -478,6 +486,15 @@ async def analyze_resumes(
     query = query.strip() if query else None
     if query == "":
         query = None
+
+    # Valida a query se fornecida
+    if query:
+        flag = validate_query(query)
+        if not flag:
+            raise HTTPException(
+                status_code=422, 
+                detail="Query inválida. Por favor forneça uma query relevante para uma análise de currículo."
+            )
 
     # Processamento dos arquivos
     all_results = await process_resumes_concurrently(files, query)

@@ -1,5 +1,3 @@
-"""Serviço de processamento de currículos."""
-
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Optional, Union
@@ -9,7 +7,6 @@ from fastapi import UploadFile
 from .. import ocr
 from .. import llm_service
 from ..config.constants import MAX_RETRIES, MAX_CONCURRENT_PROCESSES
-
 
 async def _validate_file_content(file: UploadFile) -> dict:
     """Valida o conteúdo do arquivo de forma assíncrona."""
@@ -27,7 +24,6 @@ async def _validate_file_content(file: UploadFile) -> dict:
     except Exception as e:
         return {"filename": filename, "error": f"Erro ao ler arquivo: {str(e)}"}
 
-
 async def _run_ocr(file_bytes: bytes, filename: str) -> Union[ocr.OcrResponse, ocr.OcrError]:
     """Executa OCR usando thread pool."""
     loop = asyncio.get_event_loop()
@@ -39,7 +35,6 @@ async def _run_ocr(file_bytes: bytes, filename: str) -> Union[ocr.OcrResponse, o
             filename
         )
 
-
 async def _run_llm_analysis(text: str, query: Optional[str]) -> Union[llm_service.AnalysisResponse, llm_service.AnalysisResponseNoQuery, llm_service.AnalysisError]:
     """Executa análise LLM usando thread pool."""
     loop = asyncio.get_event_loop()
@@ -50,7 +45,6 @@ async def _run_llm_analysis(text: str, query: Optional[str]) -> Union[llm_servic
             text, 
             query
         )
-
 
 async def _process_single_resume(file: UploadFile, query: Optional[str]) -> dict:
     """Processa um único currículo com retry automático."""
@@ -95,7 +89,6 @@ async def _process_single_resume(file: UploadFile, query: Optional[str]) -> dict
 
     # Erro final
     return {"filename": filename, "error": "Não foi possível processar o currículo após os retries."}
-
 
 async def process_resumes_concurrently(files: List[UploadFile], query: Optional[str]) -> List[dict]:
     """Processa os currículos."""
