@@ -1,5 +1,6 @@
 from typing import List, Optional
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+import time
 
 from ..models.models import AnalysisResponse
 from ..config.constants import MAX_USER_ID_LENGTH, MAX_QUERY_LENGTH, MAX_RETRIES
@@ -7,6 +8,9 @@ from ..utils.utils import validate_form_inputs, validate_file_list, get_score
 from ..services.analyze_service import process_resumes_concurrently
 from ..services.database_service import get_database_dependency, log_request_async
 from ..services.llm_service import validate_query
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/analyze", tags=["Análise de Currículos"])
 
@@ -471,15 +475,18 @@ async def analyze_resumes(
     ),
     db_available: bool = Depends(get_database_dependency)
 ):
-    print(f"\n🎯 Nova requisição recebida - ID: {request_id}")
-    print(f"👤 Usuário: {user_id}")
-    print(f"📊 Query: {query if query else 'Nenhuma'}")
-    print(f"📁 Arquivos: {len(files)}")
-    print(f"🗄️ Status do banco: {'Disponível' if db_available else 'Indisponível'}")
+    start_time = time.time()
+    
+    # Log consolidado de entrada
+    logger.info(f"🎯 Nova requisição - ID: {request_id} | User: {user_id} | Arquivos: {len(files)} | Query: {'Sim' if query else 'Não'} | DB: {'OK' if db_available else 'INDISPONÍVEL'}")
     
     # Validação das entradas
-    validate_form_inputs(request_id, user_id, query)
-    validate_file_list(files)
+    try:
+        validate_form_inputs(request_id, user_id, query)
+        validate_file_list(files)
+    except Exception as e:
+        logger.warning(f"⚠️ Validação rejeitada - {request_id}: {e}")
+        raise
 
     query = query.strip() if query else None
     if query == "":
@@ -489,29 +496,41 @@ async def analyze_resumes(
     if query:
         flag = validate_query(query)
         if not flag:
+            logger.warning(f"⚠️ Query inválida rejeitada - request_id: {request_id}, user_id: {user_id}")
             raise HTTPException(
                 status_code=422, 
                 detail="Query inválida. Por favor forneça uma query relevante para uma análise de currículo."
             )
 
     # Processamento dos arquivos
+    logger.debug(f"🔄 Iniciando processamento de {len(files)} arquivo(s) - {request_id}")
     all_results = await process_resumes_concurrently(files, query)
     
     # Formatação dos resultados
     successful_results = [res for res in all_results if "error" not in res]
     failed_results = [res for res in all_results if "error" in res]
     
-    print(f"📈 Resultados: {len(successful_results)} sucessos, {len(failed_results)} falhas")
+    processing_time = time.time() - start_time
+    
+    # Log de resultados com performance
+    logger.info(f"📊 Processamento concluído - {request_id} | Sucessos: {len(successful_results)} | Falhas: {len(failed_results)} | Tempo: {processing_time:.2f}s")
+    
+    # Log detalhado de falhas apenas se houver
+    if failed_results:
+        failed_files = [item['filename'] for item in failed_results]
+        error_messages = [item['error'] for item in failed_results]
+        logger.warning(f"⚠️ Arquivos com falha - {request_id}: {', '.join(failed_files)} | {', '.join(error_messages)}")
 
     if not successful_results:
-        print(f"💥 Falha total - nenhum arquivo processado com sucesso")
+        logger.error(f"❌ Falha total - nenhum arquivo processado com sucesso - {request_id}")
         
         # Log da falha no banco de dados
         log_entry = {
             "request_id": request_id, 
             "user_id": user_id,
             "query": query, 
-            "resultado": "falha_total"
+            "resultado": "falha_total",
+            "processing_time": processing_time
         }
         await log_request_async(log_entry)
         
@@ -529,6 +548,7 @@ async def analyze_resumes(
         sorted_results = sorted(successful_results, key=get_score, reverse=True)
         if len(sorted_results) > 5:
             sorted_results = sorted_results[:5]
+            logger.debug(f"🔝 Resultados limitados aos top 5 candidatos - {request_id}")
             
         final_response = {
             "request_id": request_id,
@@ -545,10 +565,14 @@ async def analyze_resumes(
         "request_id": request_id, 
         "user_id": user_id,
         "query": query, 
-        "resultado": final_response["results"]
+        "resultado": final_response["results"],
+        "processing_time": processing_time,
+        "file_count": len(files),
+        "success_count": len(successful_results),
+        "error_count": len(failed_results)
     }
     
     await log_request_async(log_entry)
 
-    print(f"✅ Requisição {request_id} finalizada com sucesso\n")
+    logger.info(f"✅ Requisição finalizada com sucesso - {request_id} | Total: {processing_time:.2f}s")
     return final_response 

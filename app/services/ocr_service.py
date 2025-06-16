@@ -4,6 +4,9 @@ from pdf2image import convert_from_bytes
 import fitz
 import io
 from pydantic import BaseModel, Field
+import logging
+
+logger = logging.getLogger(__name__)
 
 class OcrError(BaseModel):
     error: str = Field(..., description="Mensagem de erro")
@@ -30,7 +33,7 @@ def extract_text_from_file(file_bytes: bytes, filename: str) -> OcrResponse | Oc
                 direct_text += page.get_text()
             pdf_document.close()
         except Exception as e:
-            print(f"Extração direta com PyMuPDF falhou: {e}. Tentando OCR.")
+            logger.debug(f"🔄 Extração direta de PDF falhou, usando OCR como fallback: {str(e)[:50]}...")
             direct_text = ""
         
         # Se o texto direto for maior que 200 caracteres, consideramos que é um PDF de texto.

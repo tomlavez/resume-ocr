@@ -2,6 +2,9 @@ import os
 import time
 from groq import Groq
 from pydantic import BaseModel, Field
+import logging
+
+logger = logging.getLogger(__name__)
 
 client = Groq(
     api_key=os.getenv("GROQ_API_KEY"),
@@ -145,8 +148,12 @@ def get_llm_analysis(resume_text: str, query: str = None) -> AnalysisResponse | 
 
             return data
         except Exception as e:
-            print(f"Erro ao contatar o serviço da Groq: {e}")
+            logger.warning(f"⚠️ Tentativa {i+1}/{MAX_RETRIES} falhou para Groq API - análise de currículo: {str(e)[:100]}...")
+            if i == MAX_RETRIES - 1:
+                logger.error(f"❌ Todas as tentativas falharam para Groq API - análise de currículo. Último erro: {e}")
             continue
+        
+    return AnalysisError(error=f"Erro ao processar o currículo, tente novamente mais tarde.")
 
 def validate_query(query: str) -> bool:
     """
@@ -221,7 +228,9 @@ def validate_query(query: str) -> bool:
                 return False            
 
         except Exception as e:
-            print(f"Erro ao contatar o serviço da Groq: {e}")
+            logger.warning(f"⚠️ Tentativa {i+1}/{MAX_RETRIES} falhou para Groq API - validação de query: {str(e)[:100]}...")
+            if i == MAX_RETRIES - 1:
+                logger.error(f"❌ Todas as tentativas falharam para Groq API - validação de query. Último erro: {e}")
             continue
 
     return False  

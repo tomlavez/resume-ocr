@@ -19,6 +19,7 @@ A solução implementa todos os requisitos técnicos solicitados, oferecendo uma
 - **Análise sem Query**: Gera resumos identificando senioridade
 - **Processamento Assíncrono**: Múltiplos arquivos simultaneamente
 - **Formatos Suportados**: PDF, PNG, JPG, JPEG
+- **Sistema de Logging**: Logs estruturados para monitoramento e debugging
 
 ## 🤖 Modelo de IA
 
@@ -129,7 +130,7 @@ curl -X POST "http://127.0.0.1:8000/analyze/" \
 
 - **Arquivos**: Máximo 20 por requisição
 - **Tamanho**: Máximo 10MB por arquivo
-- **Processamento**: 5 arquivos simultâneos
+- **Processamento**: 3 arquivos simultâneos
 - **Formatos**: PDF, PNG, JPG, JPEG apenas
 
 ## 🔧 Comandos Úteis
@@ -146,6 +147,142 @@ docker-compose down
 
 # Reiniciar com rebuild
 sudo docker-compose up --build
+```
+
+## 📊 Sistema de Logging
+
+O projeto implementa um sistema de logging para monitoramento, debugging e auditoria de operações.
+
+### 🔧 Configuração
+
+O sistema de logging está configurado no arquivo `app/config/logging_config.py` com as seguintes características:
+
+- **Nível de Arquivo**: `DEBUG` (apenas para nossa aplicação)
+- **Nível de Console**: `INFO` (informações importantes e acima)
+- **Bibliotecas Externas**: `INFO+` (sem logs DEBUG de bibliotecas)
+- **Rotação**: 10MB por arquivo, 5 backups automáticos
+- **Formato**: `%(asctime)s | %(name)s | %(levelname)s | %(message)s`
+- **Encoding**: UTF-8
+
+
+### 📁 Estrutura de Logs
+
+```
+projeto/
+├── logs/
+│   ├── app.log                  # Arquivo principal (até 10MB)
+│   ├── app.log.1               # Backup 1
+│   ├── app.log.2               # Backup 2
+│   └── ...                     # Até 5 backups
+├── app/
+│   ├── config/
+│   │   └── logging_config.py    # Configuração centralizada
+│   ├── routers/
+│   │   └── analysis.py          # Logs consolidados de requisições
+│   └── services/
+│       ├── ocr_service.py       # Logs de fallback OCR
+│       ├── llm_service.py       # Logs de retry com contexto
+│       └── database_service.py  # Logs críticos de conexão
+├── main.py                      # Logs de lifecycle da aplicação
+└── .gitignore                   # Exclui logs/ do versionamento
+```
+
+### 🏷️ Níveis de Log Utilizados
+
+#### **DEBUG**
+- 🔄 Fallbacks normais de OCR
+- 🔝 Limitação de resultados
+- 🔄 Início de processamento de arquivos
+- 🔍 Informações detalhadas para debugging
+- ❌ **Não inclui**: Logs DEBUG de bibliotecas externas
+
+#### **INFO**
+- 🚀 Lifecycle da aplicação (startup/shutdown com timing)
+- 🎯 Requisições consolidadas (entrada única por request)
+- 📊 Resultados com métricas de performance
+- ✅ Finalizações bem-sucedidas com timing
+- 📚 Informações importantes de bibliotecas externas
+
+#### **WARNING**
+- ⚠️ Validações rejeitadas
+- ⚠️ Queries inválidas
+- ⚠️ Arquivos com falha (consolidado)
+- ⚠️ Tentativas de retry (com contexto)
+- ⚠️ Timeouts de conexão
+
+#### **ERROR**
+- ❌ Falhas críticas de conexão
+- ❌ Falha total no processamento
+- ❌ APIs indisponíveis após retries
+- ❌ Erros inesperados de banco
+
+#### **CRITICAL**
+- 💥 Configurações obrigatórias ausentes
+- 💥 Falhas na inicialização da aplicação
+
+### 🔍 Exemplos de Logs
+
+#### Inicialização com Performance
+```
+2024-01-15 10:30:25 | __main__ | INFO | 🚀 Iniciando TechMatch Resume Analyzer v1.0.0
+2024-01-15 10:30:25 | app.config.logging_config | INFO | 🔧 Sistema de logging configurado
+2024-01-15 10:30:28 | __main__ | INFO | ✅ Aplicação inicializada com sucesso | Tempo: 3.24s
+```
+
+#### Requisição Consolidada
+```
+2024-01-15 10:35:10 | app.routers.analysis | INFO | 🎯 Nova requisição - ID: f47ac10b | User: rh_empresa | Arquivos: 3 | Query: Sim | DB: OK
+2024-01-15 10:35:25 | app.routers.analysis | INFO | 📊 Processamento concluído - f47ac10b | Sucessos: 2 | Falhas: 1 | Tempo: 15.23s
+2024-01-15 10:35:25 | app.routers.analysis | WARNING | ⚠️ Arquivos com falha - f47ac10b: curriculo_corrompido.pdf
+2024-01-15 10:35:25 | app.routers.analysis | INFO | ✅ Requisição finalizada com sucesso - f47ac10b | Total: 15.45s
+```
+
+#### Retry com Contexto
+```
+2024-01-15 10:35:15 | app.services.llm_service | WARNING | ⚠️ Tentativa 1/3 falhou para análise de currículo: Connection timeout after 30s...
+2024-01-15 10:35:20 | app.services.llm_service | WARNING | ⚠️ Tentativa 2/3 falhou para análise de currículo: Rate limit exceeded for current quota...
+2024-01-15 10:35:25 | app.services.llm_service | ERROR | ❌ Todas as tentativas falharam para análise de currículo após 3 tentativas
+```
+
+#### Conexão de Banco Crítica
+```
+2024-01-15 10:30:20 | app.services.database_service | CRITICAL | 💥 MONGO_URI não encontrado nas variáveis de ambiente
+2024-01-15 10:30:25 | app.services.database_service | WARNING | ⚠️ Timeout na conexão com MongoDB (5s)
+2024-01-15 10:30:30 | app.services.database_service | ERROR | ❌ Banco de dados indisponível - aplicação funcionará sem persistência
+```
+
+### 📊 Métricas Incluídas
+
+- **Tempo de Inicialização**: Startup completo da aplicação
+- **Tempo de Processamento**: Por requisição completa
+- **Tempo de Uptime**: Na finalização da aplicação
+- **Contadores**: Sucessos/falhas por requisição
+- **Retry Tracking**: Tentativas e contexto de falhas
+
+### 🚀 Benefícios do Sistema
+
+1. **Visibilidade Completa**: DEBUG no arquivo, INFO+ no console
+2. **Performance Tracking**: Métricas de tempo para otimização
+3. **Contexto Estruturado**: Cada log possui informações essenciais
+4. **Rotação Automática**: Prevenção de logs gigantes
+5. **Debugging Eficiente**: Informações precisas para troubleshooting
+6. **Monitoramento Ready**: Logs estruturados para análise
+
+### 📊 Monitoramento de Logs
+
+#### Visualização em Tempo Real
+```bash
+# Logs completos
+tail -f logs/app.log
+
+# Apenas erros e warnings
+tail -f logs/app.log | grep -E "(ERROR|WARNING|CRITICAL)"
+
+# Performance de requisições
+tail -f logs/app.log | grep "📊 Processamento concluído"
+
+# Logs de DEBUG (apenas no arquivo)
+tail -f logs/app.log | grep "DEBUG"
 ```
 
 ## 📄 Licença
