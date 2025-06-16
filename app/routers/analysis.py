@@ -20,16 +20,74 @@ router = APIRouter(prefix="/analyze", tags=["Análise de Currículos"])
 
 Processa um ou múltiplos currículos usando OCR e IA para extrair informações relevantes.
 
-### Modos de Operação:
+## Como Usar
 
-#### **Sem Query** (Análise Geral)
-- Gera resumo identificando senioridade do candidato
-- Score retornado como string: "júnior", "pleno", "sênior"
+### Formato da Requisição
+- **Content-Type**: `multipart/form-data`
+- **Método**: `POST`
+- **Endpoint**: `/analyze/`
 
-#### **Com Query** (Análise Direcionada)  
-- Ranqueia candidatos por adequação à vaga específica
-- Score retornado como float de 0.0 a 10.0
-- Candidato com maior pontuação em relação a query
+### Campos Obrigatórios
+- `request_id`: UUID v4 único para identificar a requisição
+- `user_id`: Identificador do usuário (máx. 50 caracteres)
+- `files`: Lista de arquivos de currículos
+
+### Campos Opcionais
+- `query`: Descrição do perfil para análise direcionada (máx. 2500 caracteres)
+
+## Modos de Operação
+
+### **Análise Geral** (Sem Query)
+- Identifica automaticamente a senioridade do candidato
+- **Score**: String ("Júnior", "Pleno", "Sênior")
+- **Summary**: Resumo do currículo
+
+### **Análise Direcionada** (Com Query)  
+- Ranqueia candidatos por adequação à requisição específica
+- **Score**: Float de 0.0 a 10.0 (maior pontuação = melhor adequação)
+- **Summary**: Resumo do currículo com base na requisição
+- **Limite**: Retorna até os 5 melhores candidatos
+
+## Limites e Restrições
+
+### Arquivos
+- **Formatos aceitos**: PDF, PNG, JPG, JPEG
+- **Tamanho máximo por arquivo**: 10MB
+- **Número máximo de arquivos**: 20 por requisição
+
+## Exemplos de Requisição
+
+### Exemplo 1: Análise Geral (form-data)
+```
+POST /analyze/
+Content-Type: multipart/form-data
+
+request_id: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+user_id: "fabio"
+files: [curriculo1.pdf, curriculo2.png]
+```
+
+### Exemplo 2: Análise Direcionada (form-data)
+```
+POST /analyze/
+Content-Type: multipart/form-data
+
+request_id: "550e8400-e29b-41d4-a716-446655440001"
+user_id: "fabio"
+query: "Desenvolvedor React Senior: TypeScript, Next.js, microservices, AWS"
+files: [curriculo1.pdf, curriculo2.png, curriculo3.jpg]
+```
+
+### Exemplo 3: cURL
+```bash
+curl -X POST "http://localhost:8000/analyze/" \
+  -H "Content-Type: multipart/form-data" \
+  -F "request_id=f47ac10b-58cc-4372-a567-0e02b2c3d479" \
+  -F "user_id=recrutador_tech_01" \
+  -F "query=Desenvolvedor Python Senior com experiência em FastAPI" \
+  -F "files=@./path/to/curriculo1.pdf" \
+  -F "files=@./path/to/curriculo2.png"
+```
     """,
     response_model=AnalysisResponse,
     responses={
@@ -86,7 +144,7 @@ Processa um ou múltiplos currículos usando OCR e IA para extrair informações
             }
         },
         400: {
-            "description": "❌ Erro de Request - Dados inválidos ou malformados",
+            "description": "Erro de Request - Dados inválidos ou malformados",
             "content": {
                 "application/json": {
                     "examples": {
@@ -108,8 +166,24 @@ Processa um ou múltiplos currículos usando OCR e IA para extrair informações
                 }
             }
         },
+        405: {
+            "description": "Método não permitido",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "metodo_nao_permitido": {
+                            "summary": "Método não permitido",
+                            "description": "Método HTTP não permitido para a requisição. Requisição deve ser feita via POST.",
+                            "value": {
+                                "detail": "Method Not Allowed."
+                            }
+                        }
+                    }
+                }
+            }
+        },
         413: {
-            "description": "❌ Payload muito grande - Limites de tamanho excedidos",
+            "description": "Payload muito grande - Limites de tamanho excedidos",
             "content": {
                 "application/json": {
                     "examples": {
@@ -139,7 +213,7 @@ Processa um ou múltiplos currículos usando OCR e IA para extrair informações
             }
         },
         415: {
-            "description": "❌ Formato não suportado - Tipo de arquivo inválido", 
+            "description": "Formato não suportado - Tipo de arquivo inválido", 
             "content": {
                 "application/json": {
                     "examples": {
@@ -169,7 +243,7 @@ Processa um ou múltiplos currículos usando OCR e IA para extrair informações
             }
         },
         422: {
-            "description": "❌ Erros de Validação e Processamento",
+            "description": "Erros de Validação e Processamento",
             "content": {
                 "application/json": {
                     "examples": {
@@ -274,7 +348,7 @@ Processa um ou múltiplos currículos usando OCR e IA para extrair informações
             }
         },
         500: {
-            "description": "❌ Erro interno do servidor",
+            "description": "Erro interno do servidor",
             "content": {
                 "application/json": {
                     "examples": {
@@ -318,7 +392,7 @@ Processa um ou múltiplos currículos usando OCR e IA para extrair informações
             }
         },
         503: {
-            "description": "❌ Serviço indisponível - Banco de dados inacessível",
+            "description": "Serviço indisponível - Banco de dados inacessível",
             "content": {
                 "application/json": {
                     "examples": {
@@ -338,25 +412,53 @@ Processa um ou múltiplos currículos usando OCR e IA para extrair informações
 async def analyze_resumes(
     request_id: str = Form(
         ..., 
-        description="**UUID v4 único** para identificar esta requisição",
+        description="""
+**UUID v4 único para identificar esta requisição**
+
+- **Formato**: UUID versão 4 (ex: `f47ac10b-58cc-4372-a567-0e02b2c3d479`)
+- **Obrigatório**: Sim
+- **Validação**: Deve ser um UUID v4 válido
+- **Uso**: Rastreamento de logs e identificação única da requisição
+        """,
         example="f47ac10b-58cc-4372-a567-0e02b2c3d479",
     ),
     user_id: str = Form(
         ..., 
-        description="**Identificador do usuário** solicitante (máx. 50 caracteres)",
+        description="""
+**Identificador do usuário solicitante**
+
+- **Formato**: String alfanumérica (ex: `recrutador_tech_01`)
+- **Limite**: Máximo 50 caracteres
+- **Obrigatório**: Sim
+- **Validação**: Não pode ser vazio ou conter apenas espaços
+- **Uso**: Identificação do usuário para logs e auditoria
+        """,
         example="recrutador_tech_01",
         max_length=MAX_USER_ID_LENGTH
     ),
     files: List[UploadFile] = File(
         ..., 
-        description="**Lista de currículos** para análise (PDF, PNG, JPG, JPEG - máx. 10MB cada, 20 arquivos total)",
+        description="""
+**Lista de currículos para análise**
+
+- **Formatos aceitos**: PDF, PNG, JPG, JPEG
+- **Tamanho máximo por arquivo**: 10MB
+- **Número máximo**: 20 arquivos por requisição
+- **Obrigatório**: Sim (mínimo 1 arquivo)
+        """,
     ),
     query: Optional[str] = Form(
-        None, 
-        description="""**Query opcional** para análise direcionada:
-        
-**Sem Query**: Gera resumo geral identificando senioridade
-**Com Query**: Ranqueia candidatos por adequação à vaga (0-10)
+        default=None, 
+        description="""
+**Query opcional para análise direcionada**
+
+- **Formato**: Texto livre descrevendo a vaga/requisitos
+- **Limite**: Máximo 2500 caracteres
+- **Obrigatório**: Não
+- **Comportamento**:
+  - **Sem query**: Análise geral identificando senioridade ("Júnior", "Pleno", "Sênior")
+  - **Com query**: Ranqueamento por adequação à vaga (score 0.0-10.0, retorna top 5)
+- **Exemplo**: Desenvolvedor React Senior: TypeScript, Next.js, microservices, AWS, Docker, testes automatizados, liderança técnica
         """,
         example="Desenvolvedor React Senior: TypeScript, Next.js, microservices, AWS, Docker, testes automatizados, liderança técnica",
         max_length=MAX_QUERY_LENGTH
@@ -410,9 +512,12 @@ async def analyze_resumes(
 
     if query:
         sorted_results = sorted(successful_results, key=get_score, reverse=True)
+        if len(sorted_results) > 5:
+            sorted_results = sorted_results[:5]
+            
         final_response = {
             "request_id": request_id,
-            "results": [sorted_results[0]]
+            "results": sorted_results
         }
     else:
         final_response = {
