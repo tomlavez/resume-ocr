@@ -1,65 +1,61 @@
 import os
 from datetime import datetime
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.errors import ServerSelectionTimeoutError
 from fastapi import HTTPException
+import logging
+
+logger = logging.getLogger(__name__)
 
 MONGO_URI = os.getenv("MONGO_URI")
 
 if not MONGO_URI:
-    raise HTTPException(status_code=500, detail="Internal Server Error: A variável de ambiente MONGO_URI não foi definida.")
+    logger.critical("❌ MONGO_URI não encontrada nas variáveis de ambiente")
+    raise ValueError("MONGO_URI não encontrada nas variáveis de ambiente")
 
-try:
-    async_client = AsyncIOMotorClient(MONGO_URI)
-    async_db = async_client.techmatch_logs
-    async_log_collection = async_db.requests
-    
-except Exception as e:
-    raise HTTPException(status_code=500, detail="Internal Server Error: Erro ao acessar banco de dados. Tente novamente mais tarde.")
-
+# Cliente assíncrono
+async_client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=3000)
+async_database = async_client["resume_analyzer"]
+async_log_collection = async_database["requests"]
 
 async def check_database_connection() -> bool:
     """
-    Verifica se a conexão com o banco de dados está funcionando.
+    Verifica se o MongoDB está acessível.
     
     Returns:
-        bool: True se a conexão estiver OK, False caso contrário
-        
-    Raises:
-        HTTPException: Se houver erro crítico na conexão
+        bool: True se a conexão for bem-sucedida, False caso contrário.
     """
     try:
-        # Tenta fazer um ping no servidor MongoDB
-        await async_client.admin.command('ping')
-        
-        # Verifica se o banco de dados existe e está acessível
-        db_names = await async_client.list_database_names()
-        
-        # Verifica se a coleção existe ou pode ser criada
-        collections = await async_db.list_collection_names()
-        
+        # Tenta executar um comando simples para testar a conexão
+        await async_client.admin.command("ping")
         return True
-        
+    except ServerSelectionTimeoutError:
+        logger.warning("⚠️ MongoDB não acessível - timeout na conexão")
+        return False
     except Exception as e:
-        raise HTTPException(
-            status_code=503, 
-            detail="Service Unavailable: Banco de dados indisponível. Tente novamente mais tarde."
-        )
-
+        logger.error(f"❌ Erro inesperado ao conectar com MongoDB: {e}")
+        return False
 
 async def get_database_dependency():
     """
-    Dependência do FastAPI para verificar a conexão com o banco de dados.
+    Verifica se o banco de dados está disponível.
     
-    Esta função será usada como dependência nas rotas que precisam do banco.
+    Esta função é usada como dependência do FastAPI.
     
     Returns:
-        bool: True se a conexão estiver OK
+        bool: Status da conexão do banco de dados
         
     Raises:
         HTTPException: Se o banco estiver indisponível
     """
-    return await check_database_connection()
-
+    db_status = await check_database_connection()
+    if not db_status:
+        logger.error("🔴 Banco de dados indisponível - requisições serão rejeitadas")
+        raise HTTPException(
+            status_code=503, 
+            detail="Service Unavailable: Banco de dados indisponível. Tente novamente mais tarde."
+        )
+    return db_status
 
 async def log_request_async(log_data: dict):
     """
@@ -68,8 +64,8 @@ async def log_request_async(log_data: dict):
     try:
         log_data["timestamp"] = datetime.now()
         await async_log_collection.insert_one(log_data)
-        print(f"-> Log da requisição '{log_data.get('request_id')}' salvo com sucesso.")
     except Exception as e:
+        logger.error(f"❌ Falha ao salvar log no banco - request_id: {log_data.get('request_id')}: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error: Erro ao acessar banco de dados. Tente novamente mais tarde.")
     
 
@@ -79,8 +75,11 @@ async def get_analysis_by_request_id_async(request_id: str) -> dict | None:
     """
     try:
         result = await async_log_collection.find_one({"request_id": request_id}, {"_id": 0})
+        if not result:
+            logger.debug(f"🔍 Nenhum log encontrado para request_id: {request_id}")
         return result
     except Exception as e:
+        logger.error(f"❌ Erro ao buscar log do banco - request_id: {request_id}: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error: Erro ao acessar banco de dados. Tente novamente mais tarde.")
 
 
@@ -92,5 +91,7 @@ async def close_database_connection():
     """
     try:
         async_client.close()
+        logger.info("🔌 Conexão com MongoDB fechada")
     except Exception as e:
+        logger.error(f"❌ Erro ao fechar conexão com MongoDB: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error: Erro ao fechar conexão com MongoDB. Tente novamente mais tarde.")

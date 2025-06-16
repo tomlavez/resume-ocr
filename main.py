@@ -1,9 +1,15 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+import logging
+import time
 
 from app.routers import analysis
 from app.services.database_service import close_database_connection
+from app.config.logging_config import setup_logging
 
+# Configurar logging
+setup_logging()
+logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -14,16 +20,26 @@ async def lifespan(app: FastAPI):
     Shutdown: Limpeza de recursos
     """
     # Startup
-    print("🚀 Iniciando TechMatch Resume Analyzer - versão 1.0.0")
-    print("✅ Aplicação inicializada com sucesso")
+    start_time = time.time()
+    logger.info("🚀 Iniciando TechMatch Resume Analyzer v1.0.0")
+    
+    try:
+        # Aqui poderiam ser adicionadas validações de dependências
+        logger.info("✅ Aplicação inicializada com sucesso")
+    except Exception as e:
+        logger.critical(f"❌ Falha crítica na inicialização: {e}")
+        raise
     
     yield
     
     # Shutdown
-    print("🔄 Encerrando aplicação...")
-    await close_database_connection()
-    print("✅ Aplicação encerrada com sucesso")
-
+    logger.info("🔄 Encerrando aplicação...")
+    try:
+        await close_database_connection()
+        shutdown_time = time.time() - start_time
+        logger.info(f"✅ Aplicação encerrada com sucesso - Uptime: {shutdown_time:.1f}s")
+    except Exception as e:
+        logger.error(f"❌ Erro durante encerramento: {e}")
 
 # Criação da aplicação FastAPI
 app = FastAPI(
@@ -51,9 +67,6 @@ Analise currículos automaticamente usando OCR e Inteligência Artificial.
 
 # Inclusão dos routers
 app.include_router(analysis.router)
-
-# Log de inicialização
-print("🚀 TechMatch Resume Analyzer iniciado - versão 1.0.0")
 
 if __name__ == "__main__":
     import uvicorn
