@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from motor.motor_asyncio import AsyncIOMotorClient
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException
 
 MONGO_URI = os.getenv("MONGO_URI")
 

@@ -1,5 +1,3 @@
-"""Router para análise de currículos."""
-
 from typing import List, Optional
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 
@@ -7,7 +5,7 @@ from ..models.models import AnalysisResponse
 from ..config.constants import MAX_USER_ID_LENGTH, MAX_QUERY_LENGTH, MAX_RETRIES
 from ..utils.utils import validate_form_inputs, validate_file_list, get_score
 from ..services.resume_service import process_resumes_concurrently
-from ..database import get_database_dependency, log_request_async, check_database_connection
+from ..database import get_database_dependency, log_request_async
 from ..llm_service import validate_query
 
 router = APIRouter(prefix="/analyze", tags=["Análise de Currículos"])
