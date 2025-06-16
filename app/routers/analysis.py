@@ -344,12 +344,6 @@ curl -X POST "http://localhost:8000/analyze/" \
                                         "msg": "Field required",
                                         "input": None
                                     },
-                                    {
-                                        "type": "missing", 
-                                        "loc": ["body", "user_id"],
-                                        "msg": "Field required",
-                                        "input": None
-                                    }
                                 ]
                             }
                         }
