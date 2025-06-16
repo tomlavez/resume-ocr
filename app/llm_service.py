@@ -44,7 +44,7 @@ def get_llm_analysis(resume_text: str, query: str = None) -> AnalysisResponse | 
         
         Feedback:
             Score: (float, de 0.0 a 10.0). O quanto o candidato está alinhado com a requisição.
-            Resumo: (string). Um resumo curto sobre a adequação do candidato. Considerar as tecnologias, frameworks, linguagens de programação, etc. da requisição e como o candidato se alinha com elas.
+            Resumo: (string). Um resumo detalhado sobre a adequação do candidato. Considerar as tecnologias, frameworks, linguagens de programação, etc. da requisição e como o candidato se alinha com elas.
         
         Extra_comments:
             Insira aqui qualquer extra_comment que você quiser adicionar sobre o currículo.
@@ -130,3 +130,78 @@ def get_llm_analysis(resume_text: str, query: str = None) -> AnalysisResponse | 
         except Exception as e:
             print(f"Erro ao contatar o serviço da Groq: {e}")
             continue
+
+def validate_query(query: str) -> bool:
+    """
+    Valida a query para garantir que ela seja adequada para análise.
+
+    Parâmetros:
+        query: string a ser validada
+
+    Retorna:
+        bool: True se a query for válida, False caso contrário
+    """
+
+    system_prompt = f"""
+    Você é um Validador de Requisições para um sistema de Recrutamento e Seleção. Sua única função é analisar uma requisição (query) e determinar se ela é apropriada para o contexto de análise e triagem de currículos.
+
+    O sistema receberá esta requisição para buscar, classificar, comparar ou avaliar candidatos com base nas informações exclusivamente contidas em seus currículos. Você é o filtro de entrada que impede que requisições fora de contexto sejam processadas.
+
+    Uma requisição é considerada valida (True) se:
+    1.  Busca por Fatos: Pergunta sobre habilidades, tecnologias, experiências, formação ou certificações específicas (ex: "Liste os candidatos com certificação PMP").
+    2.  Descrição de Vaga É uma descrição de um perfil profissional desejado, mesmo que complexa (ex: "Procuro desenvolvedor front-end pleno com React e TypeScript").
+    3.  Análise Comparativa ou Avaliativa Pede uma classificação, comparação ou avaliação baseada nos dados dos currículos. Isso inclui perguntas com termos como "melhor", "mais qualificado", "mais sênior" ou "mais indicado" pois a resposta exige uma síntese e análise das qualificações profissionais.
+
+    Uma requisição é considerada invalida (False) se:
+    1.  Conhecimento Geral: É uma pergunta sobre fatos ou temas não relacionados a um currículo (ex: "Qual a capital da França?", "Quem é o presidente atual?").
+    2.  Opinião Pessoal Não Profissional: Faz perguntas subjetivas que não podem ser respondidas com dados de um currículo (ex: "Qual candidato parece mais simpático?", "Qual deles tem o nome mais bonito?").
+    3.  Comando Genérico: É uma ordem para a IA executar uma tarefa não relacionada à análise de currículos (ex: "Escreva um e-mail", "Calcule 15*3").
+
+    # Importante:
+        - "Quem é o melhor candidato frontend?" -> Esta pergunta exige uma análise profissional dos currículos, comparando anos de experiência, tecnologias dominadas, projetos realizados, etc.
+        - "Quem parece ser o candidato mais simpático?" -> Esta pergunta exige uma opinião pessoal, impossível de ser determinada por um currículo.
+    A principal diferença é que a primeira busca uma análise a respeito de aspectos do currículo (Frontend) mesmo pedindo o 'melhor' candidato, enquanto a segunda busca uma opinião pessoal (simpático) que não pode ser extraída de um currículo.
+        
+    Note que você também pode receber apenas uma lista de areas de conhecimento, tecnologias ou habilidades, como "Backend", "Frontend", "DevOps", "Django, Flask, FastAPI", "Java, Python, Go", "AWS, Azure, GCP", "Docker, Kubernetes", "SQL, NoSQL", "Machine Learning, Data Science". Essas listas são válidas pois serão usadas para buscar candidatos com essas habilidades específicas.
+
+    Se a query for válida, retorne True. Se não for válida, retorne False.
+    """
+
+    user_prompt = f"""
+    Você receberá uma query. Sua função é validar se essa query é adequada para análise de currículos.
+
+    ---
+    QUERY:
+    "{query}"
+    ---
+
+    Se a query for válida, retorne True. Se não for válida, retorne False.
+    """
+
+    for i in range(MAX_RETRIES):
+        try:
+            response = client.chat.completions.create(
+                model="llama3-8b-8192",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.2,
+            )
+
+            res = response.choices[0].message.content
+
+            if "true" in res.lower() and "false" in res.lower():
+                continue
+
+            if "true" in res.lower():
+                return True
+            
+            elif "false" in res.lower():
+                return False            
+
+        except Exception as e:
+            print(f"Erro ao contatar o serviço da Groq: {e}")
+            continue
+
+    return False  
