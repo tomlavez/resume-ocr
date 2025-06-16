@@ -4,8 +4,8 @@ from typing import List, Optional, Union
 
 from fastapi import UploadFile
 
-from .. import ocr
-from .. import llm_service
+from . import ocr_service
+from . import llm_service
 from ..config.constants import MAX_RETRIES, MAX_CONCURRENT_PROCESSES
 
 async def _validate_file_content(file: UploadFile) -> dict:
@@ -24,13 +24,13 @@ async def _validate_file_content(file: UploadFile) -> dict:
     except Exception as e:
         return {"filename": filename, "error": f"Erro ao ler arquivo: {str(e)}"}
 
-async def _run_ocr(file_bytes: bytes, filename: str) -> Union[ocr.OcrResponse, ocr.OcrError]:
+async def _run_ocr(file_bytes: bytes, filename: str) -> Union[ocr_service.OcrResponse, ocr_service.OcrError]:
     """Executa OCR usando thread pool."""
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor() as executor:
         return await loop.run_in_executor(
             executor, 
-            ocr.extract_text_from_file, 
+            ocr_service.extract_text_from_file, 
             file_bytes, 
             filename
         )
@@ -68,7 +68,7 @@ async def _process_single_resume(file: UploadFile, query: Optional[str]) -> dict
             else:
                 return {"filename": filename, "error": f"Erro de OCR: {str(e)}"}
         
-        if isinstance(extracted_text, ocr.OcrError):
+        if isinstance(extracted_text, ocr_service.OcrError):
             return {"filename": filename, "error": f"Erro de OCR: {extracted_text.error}"}
 
         # Análise do LLM

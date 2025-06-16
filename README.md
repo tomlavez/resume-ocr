@@ -52,6 +52,8 @@ MONGO_URI=mongodb://mongo:27017/
 sudo docker-compose up --build
 ```
 
+> **💡 Dica para Windows**: Não é necessário usar `sudo` no Windows.
+
 ### 4. Acesse a aplicação
 - **API**: http://127.0.0.1:8000
 - **Documentação**: http://127.0.0.1:8000/docs
@@ -71,6 +73,32 @@ Content-Type: multipart/form-data
 
 ### Parâmetro Opcional
 - `query`: Descrição da vaga para ranqueamento (máx. 2500 chars)
+
+### 💡 Dicas para o Parâmetro Query
+
+O parâmetro `query` deve ser utilizado especificamente para análise de currículos e vagas. Para obter melhores resultados:
+
+#### ✅ Boas Práticas
+- **Seja específico sobre a posição**: Descreva claramente o cargo e requisitos
+- **Foque no contexto profissional**: Mantenha a query relacionada a currículos e competências
+- **Use a palavra "vaga"**: A inclusão da palavra "vaga" na sua query pode ajudar o modelo entender melhor o contexto
+
+#### 📝 Exemplos
+
+**❌ Evite queries genéricas:**
+- "Qual o melhor candidato para devops?"
+- "Quem tem mais experiência?"
+- "Ranking de candidatos"
+
+**✅ Use queries específicas e contextualizadas:**
+- "Qual o melhor candidato para a vaga de devops com experiência em AWS?"
+- "Ranking de candidatos para a vaga de desenvolvedor Python sênior"
+- "Candidatos mais adequados para a vaga de analista de dados com conhecimento em SQL"
+
+#### ⚠️ Evite
+- Perguntas fora do contexto profissional
+- Queries muito genéricas sem especificar a vaga
+- Contextos que não sejam relacionados a análise de currículos
 
 ### Exemplo Básico
 ```bash

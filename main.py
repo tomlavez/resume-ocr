@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.routers import analysis
-from app.database import close_database_connection
+from app.services.database_service import close_database_connection
 
 
 @asynccontextmanager
