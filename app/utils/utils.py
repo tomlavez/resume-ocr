@@ -1,5 +1,3 @@
-"""Funções utilitárias do sistema."""
-
 import uuid
 from typing import List, Optional
 from fastapi import HTTPException, UploadFile
@@ -56,3 +54,4 @@ def get_score(candidate: dict) -> float:
         return float(score) if score is not None else 0.0
     except (ValueError, TypeError):
         return 0.0 
+    
