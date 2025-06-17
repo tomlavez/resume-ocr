@@ -19,13 +19,104 @@ A solução implementa todos os requisitos técnicos solicitados, oferecendo uma
 - **Análise sem Query**: Gera resumos identificando senioridade
 - **Processamento Assíncrono**: Múltiplos arquivos simultaneamente
 - **Formatos Suportados**: PDF, PNG, JPG, JPEG
+- **Validação**: Validação com IA para garantir que arquivos são currículos
+- **OCR**: Preprocessamento de imagens para melhor qualidade
 - **Sistema de Logging**: Logs estruturados para monitoramento e debugging
+
+## 📁 Estrutura do Repositório
+
+```
+resume-ocr/
+├── app/                         # Código principal da aplicação
+│   ├── config/                  # Configurações da aplicação
+│   │  ├── constants.py          # Constantes e configurações gerais
+│   │  └── logging_config.py     # Configuração do sistema de logs
+│   ├── models/                  # Modelos de dados e schemas
+│   │  └── models.py             # Definições Pydantic para validação
+│   ├── routers/                 # Rotas e endpoints da API
+│   │  └── analysis.py           # Endpoint principal para análise
+│   ├── services/                # Serviços principais do sistema
+│   │  ├── analyze_service.py    # Orquestração das análises
+│   │  ├── database_service.py   # Operações com MongoDB
+│   │  ├── llm_service.py        # Integração com modelos de IA
+│   │  └── ocr_service.py        # Processamento OCR e extração
+│   └── utils/                   # Utilitários e helpers
+│      ├── utils.py              # Funções auxiliares gerais
+│      └── validation_service.py # Validação de conteúdo com IA
+└── logs/                        # Logs da aplicação (gerado em runtime)
+├── tests/                       # Arquivos para testes
+│   ├── curriculos/              # Currículos de exemplo para testes
+│   └── vagas/                   # Descrições de vagas para testes
+├── .env.example                 # Exemplo de variáveis de ambiente
+├── .gitignore                   # Arquivos ignorados pelo Git
+├── docker-compose.yml           # Orquestração de serviços
+├── Dockerfile                   # Configuração para containerização
+├── main.py                      # Ponto de entrada da aplicação
+├── README.md                    # Documentação principal do projeto
+├── requirements.txt             # Dependências Python
+├── teste back ia.pdf            # Documento de especificação do desafio
+```
+
+## 🔍 Processamento OCR
+
+O sistema implementa um pipeline de OCR com preprocessamento automático para maximizar a qualidade da extração de texto:
+
+### 📄 Estratégia por Tipo de Arquivo
+
+#### **PDFs**
+1. **Extração Direta**: Primeiro tenta extrair texto nativo do PDF
+2. **Validação com IA**: Verifica se o texto extraído é de um currículo válido
+3. **Detecção Automática**: Se o texto extraído for < 200 caracteres, identifica como PDF de imagem
+4. **OCR com Preprocessamento**: Converte páginas para imagem e aplica preprocessamento
+5. **Validação por Página**: Cada página é validada individualmente pela IA
+
+#### **Imagens** (PNG, JPG, JPEG)
+1. **Validação Visual com IA**: Análise inteligente para confirmar que é um currículo
+2. **Preprocessamento Automático**: Otimizações antes do OCR
+
+### 🔧 Pipeline de Preprocessamento
+
+O preprocessamento é aplicado automaticamente em:
+- **Imagens diretas**: PNG, JPG, JPEG
+- **PDFs de imagem**: PDFs que contêm imagens escaneadas (com validação por página)
+
+#### Etapas do Preprocessamento:
+1. **Conversão para Escala de Cinza**: Melhora contraste e reduz ruído
+2. **Redução de Ruído**: Filtro Mediano (3x3) para preservar bordas
+3. **Binarização Adaptativa**: Threshold automático para cada região da imagem
+4. **Fallback**: Se o preprocessamento falhar, usa a imagem original
 
 ## 🤖 Modelo de IA
 
-Este projeto utiliza o modelo **llama3-8b-8192** da Groq para análise de currículos. 
+Este projeto utiliza dois modelos especializados da Groq para diferentes funções:
 
-> ⚠️ **Importante**: A troca do modelo pode causar variações significativas no desempenho e na qualidade das análises. O sistema foi otimizado especificamente para este modelo, incluindo os prompts de sistema e a estrutura de resposta esperada.
+### 📊 **Análise de Currículos**
+- **Modelo**: `llama3-8b-8192`
+- **Função**: Análise detalhada e ranqueamento de currículos
+- **Uso**: Geração de resumos e pontuação de adequação à vaga
+
+### 🔍 **Validação de Conteúdo**
+- **Modelo**: `meta-llama/llama-4-scout-17b-16e-instruct`
+- **Função**: Validação se documentos são currículos válidos
+- **Uso**: Filtragem inteligente antes do processamento
+
+> ⚠️ **Importante**: A troca dos modelos pode causar variações significativas no desempenho e na qualidade das análises. O sistema foi otimizado especificamente para estes modelos, incluindo os prompts de sistema e a estrutura de resposta esperada.
+
+## 🤖 Validação de Conteúdo com IA
+
+O sistema implementa uma camada de validação usando IA para garantir que apenas currículos válidos sejam processados:
+
+### 🔍 Como Funciona
+
+#### **Para Imagens** (PNG, JPG, JPEG)
+1. **Análise Visual**: Modelo de visão analisa a estrutura visual do documento
+2. **Identificação de Padrões**: Detecta elementos típicos de currículos (seções, layout, formatação)
+3. **Validação de Conteúdo**: Verifica se contém informações relevantes a currículos
+
+#### **Para PDFs**
+- **Texto Direto**: Analisa o texto extraído diretamente do PDF
+- **PDF de Imagem**: Valida cada página convertida para imagem
+- **Validação Granular**: Análise página por página em PDFs multipágina
 
 ## 📋 Pré-requisitos
 
@@ -164,35 +255,17 @@ O sistema de logging está configurado no arquivo `app/config/logging_config.py`
 - **Formato**: `%(asctime)s | %(name)s | %(levelname)s | %(message)s`
 - **Encoding**: UTF-8
 
-
-### 📁 Estrutura de Logs
-
-```
-projeto/
-├── logs/
-│   ├── app.log                  # Arquivo principal (até 10MB)
-│   ├── app.log.1               # Backup 1
-│   ├── app.log.2               # Backup 2
-│   └── ...                     # Até 5 backups
-├── app/
-│   ├── config/
-│   │   └── logging_config.py    # Configuração centralizada
-│   ├── routers/
-│   │   └── analysis.py          # Logs consolidados de requisições
-│   └── services/
-│       ├── ocr_service.py       # Logs de fallback OCR
-│       ├── llm_service.py       # Logs de retry com contexto
-│       └── database_service.py  # Logs críticos de conexão
-├── main.py                      # Logs de lifecycle da aplicação
-└── .gitignore                   # Exclui logs/ do versionamento
-```
-
 ### 🏷️ Níveis de Log Utilizados
 
 #### **DEBUG**
 - 🔄 Fallbacks normais de OCR
 - 🔝 Limitação de resultados
 - 🔄 Início de processamento de arquivos
+- 🖼️ Detecção de tipo de arquivo (imagem/PDF)
+- 🤖 Validação de conteúdo com IA (imagens e texto)
+- ✅ Confirmação de validação bem-sucedida
+- 🔧 Etapas detalhadas do preprocessamento OCR
+- 📄 Conversão de páginas de PDF para imagem
 - 🔍 Informações detalhadas para debugging
 - ❌ **Não inclui**: Logs DEBUG de bibliotecas externas
 
@@ -207,6 +280,8 @@ projeto/
 - ⚠️ Validações rejeitadas
 - ⚠️ Queries inválidas
 - ⚠️ Arquivos com falha (consolidado)
+- ⚠️ Arquivos rejeitados pela validação IA (não são currículos)
+- ⚠️ Falhas na validação com IA (fallback para processamento normal)
 - ⚠️ Tentativas de retry (com contexto)
 - ⚠️ Timeouts de conexão
 
@@ -219,37 +294,6 @@ projeto/
 #### **CRITICAL**
 - 💥 Configurações obrigatórias ausentes
 - 💥 Falhas na inicialização da aplicação
-
-### 🔍 Exemplos de Logs
-
-#### Inicialização com Performance
-```
-2024-01-15 10:30:25 | __main__ | INFO | 🚀 Iniciando TechMatch Resume Analyzer v1.0.0
-2024-01-15 10:30:25 | app.config.logging_config | INFO | 🔧 Sistema de logging configurado
-2024-01-15 10:30:28 | __main__ | INFO | ✅ Aplicação inicializada com sucesso | Tempo: 3.24s
-```
-
-#### Requisição Consolidada
-```
-2024-01-15 10:35:10 | app.routers.analysis | INFO | 🎯 Nova requisição - ID: f47ac10b | User: rh_empresa | Arquivos: 3 | Query: Sim | DB: OK
-2024-01-15 10:35:25 | app.routers.analysis | INFO | 📊 Processamento concluído - f47ac10b | Sucessos: 2 | Falhas: 1 | Tempo: 15.23s
-2024-01-15 10:35:25 | app.routers.analysis | WARNING | ⚠️ Arquivos com falha - f47ac10b: curriculo_corrompido.pdf
-2024-01-15 10:35:25 | app.routers.analysis | INFO | ✅ Requisição finalizada com sucesso - f47ac10b | Total: 15.45s
-```
-
-#### Retry com Contexto
-```
-2024-01-15 10:35:15 | app.services.llm_service | WARNING | ⚠️ Tentativa 1/3 falhou para análise de currículo: Connection timeout after 30s...
-2024-01-15 10:35:20 | app.services.llm_service | WARNING | ⚠️ Tentativa 2/3 falhou para análise de currículo: Rate limit exceeded for current quota...
-2024-01-15 10:35:25 | app.services.llm_service | ERROR | ❌ Todas as tentativas falharam para análise de currículo após 3 tentativas
-```
-
-#### Conexão de Banco Crítica
-```
-2024-01-15 10:30:20 | app.services.database_service | CRITICAL | 💥 MONGO_URI não encontrado nas variáveis de ambiente
-2024-01-15 10:30:25 | app.services.database_service | WARNING | ⚠️ Timeout na conexão com MongoDB (5s)
-2024-01-15 10:30:30 | app.services.database_service | ERROR | ❌ Banco de dados indisponível - aplicação funcionará sem persistência
-```
 
 ### 📊 Métricas Incluídas
 
@@ -267,23 +311,6 @@ projeto/
 4. **Rotação Automática**: Prevenção de logs gigantes
 5. **Debugging Eficiente**: Informações precisas para troubleshooting
 6. **Monitoramento Ready**: Logs estruturados para análise
-
-### 📊 Monitoramento de Logs
-
-#### Visualização em Tempo Real
-```bash
-# Logs completos
-tail -f logs/app.log
-
-# Apenas erros e warnings
-tail -f logs/app.log | grep -E "(ERROR|WARNING|CRITICAL)"
-
-# Performance de requisições
-tail -f logs/app.log | grep "📊 Processamento concluído"
-
-# Logs de DEBUG (apenas no arquivo)
-tail -f logs/app.log | grep "DEBUG"
-```
 
 ## 📄 Licença
 
